@@ -4,7 +4,11 @@ const taskSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
     title: { type: String, required: true },
     description: { type: String },
+<<<<<<< Updated upstream
     priority: { type: String },
+=======
+    priority: { type: Number },
+>>>>>>> Stashed changes
     dueDate: {
         startDate: { type: Date, required: true },
         endDate: { type: Date, required: true },

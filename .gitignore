@@ -1,2 +1,5 @@
 .env
 node_modules
+ppo_task_env
+__pycache__/
+rl_service_env

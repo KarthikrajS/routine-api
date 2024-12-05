@@ -5,6 +5,10 @@ import cors from 'cors';
 import connectToDB from './utils/db.js';
 import taskRoutes from './routes/taskRoutes.js';
 import { connectRabbitMQ } from "./utils/rabbitmq.js";
+<<<<<<< Updated upstream
+=======
+import redisClient from "./utils/redisClient.js";
+>>>>>>> Stashed changes
 
 dotenv.config();
 
@@ -19,6 +23,7 @@ app.use(bodyParser.json());
 // Routes
 app.use('/tasks', taskRoutes);
 
+<<<<<<< Updated upstream
 const queue = 'task_created';
 connectRabbitMQ().then(channel => {
 
@@ -46,6 +51,30 @@ connectRabbitMQ().then(channel => {
 });
 
 
+=======
+// const queue = 'task_created';
+connectRabbitMQ().then(channel => {
+
+    // Consume messages from the queue
+    // channel.consume('taskQueue', async (message) => {
+    //     const suggestions = JSON.parse(message.content.toString());
+    //     console.log('Received suggestions from RL service:', suggestions);
+
+    //     // Update database or notify front-end with suggestions
+    //     channel.ack(message);
+    // });
+
+    //For task produce
+    // channel.assertQueue(queue, { durable: true });
+    // channel.sendToQueue(queue, Buffer.from(JSON.stringify("taskData")), {
+    //     persistent: true,
+    // });
+});
+
+redisClient.connect().then(() =>
+    console.log('Connected to Redis')
+)
+>>>>>>> Stashed changes
 // Start server
 connectToDB().then(() => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
