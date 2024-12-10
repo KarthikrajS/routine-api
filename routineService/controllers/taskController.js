@@ -20,11 +20,30 @@ const createTask = async (req, res) => {
     }
 };
 
-export const fetchTasksForUser = async (id) => {
+export const fetchTasksForUser = async (userId) => {
     try {
-        const tasks = await Task.find({ userId: id });
-        console.log(tasks, "_qwewqe");
-        return tasks;
+        const tasks = await Task.find({ userId: userId }).sort({ _id: asc });
+        if (!tasks || tasks.length === 0) {
+            console.warn(`No tasks found for userId: ${userId}`);
+        }
+
+        // Get today's date
+        const today = new Date().toLocaleDateString(); // Current date in 'MM/DD/YYYY' format
+
+        // Filter tasks for the current date based on plannedStartTime and dueDate
+        const todaysTasks = tasks.filter(task => {
+            const taskPlannedDate = task.plannedStartTime.date ? new Date(task.plannedStartTime.date).toLocaleDateString() : null;
+            const taskDueDate = new Date(task.dueDate.startDate).toLocaleDateString();
+
+            // Check if plannedStartTime is today or if the dueDate is today
+            return (taskPlannedDate === today || taskDueDate === today);
+        });
+
+        if (todaysTasks.length === 0) {
+            console.warn('No tasks found for today.');
+        }
+
+        return todaysTasks;
     } catch (error) {
         console.error(`Error fetching tasks for user ${userId}:`, error);
         return [];
@@ -81,7 +100,7 @@ const updateTask = async (req, res) => {
         // sendMessage('taskQueue', updatedTask);
         // if (updatedTask?.status === "completed")
         sendMessage('taskQueue', updatedTask);
-        
+
         await redisClient.del('tasks:*');
 
         res.status(200).json({ message: 'Task updated successfully', data: updatedTask });
@@ -99,7 +118,7 @@ const deleteTask = async (req, res) => {
         await redisClient.del('tasks:*');
         if (!deletedTask) return res.status(404).json({ error: 'Task not found' });
         sendMessage('analysisQueue', deletedTask)
-        res.status(200).json({ message: 'Task deleted successfully' , data: deletedTask});
+        res.status(200).json({ message: 'Task deleted successfully', data: deletedTask });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

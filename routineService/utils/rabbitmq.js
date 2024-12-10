@@ -86,10 +86,10 @@ const parseMessageContent = (messageContent) => {
         // Convert Buffer data to a string
         const decodedMessage = Buffer.from(messageContent).toString();
 
-        console.log(decodedMessage,"decodedMessage");
+        console.log(decodedMessage, "decodedMessage");
         // Parse the string as JSON
         const parsedMessage = decodedMessage;
-        console.log(parsedMessage,"parsedMessage");
+        console.log(parsedMessage, "parsedMessage");
 
         // Validate the structure
         if (Array.isArray(messageContent) && messageContent.length === 2) {
@@ -301,27 +301,61 @@ export const publishTaskList = async (taskList) => {
 //     });
 // };
 
+// export const consumeTaskSuggestions = async () => {
+//     await consumeMessage('task_suggestion_queue', async (message) => {
+//         console.log('Received raw message:', message);
+//         // const messageContent = JSON.parse(message.content.toString());
+//         // const rawContent = message.content.toString();
+//         // const messageContent = JSON.parse(rawContent);
+//         // const parsedContent = parseMessageContent(messageContent);
+//         // if (!parsedContent) {
+//         //     console.error('Malformed message. Acknowledging and skipping.');
+//         //     return acknowledgeMessage(message);
+//         // }
+
+//         // const [userId, suggestions] = parsedContent;
+
+//         // // Log userId and suggestions for debugging
+//         // console.log('Parsed userId:', userId);
+//         // console.log('Parsed suggestions:', suggestions);
+//         const userId = message?.userId
+//         const suggestions = message?.suggestions
+
+//         try {
+//             const tasks = await fetchTasksForUser(userId);
+
+//             if (!tasks || tasks.length === 0) {
+//                 console.warn(`No tasks found for userId: ${userId}`);
+//             }
+
+//             if (tasks.length !== suggestions.length) {
+//                 console.error('Mismatch in task and suggestion counts:', {
+//                     tasksLength: tasks.length,
+//                     suggestionsLength: suggestions.length,
+//                 });
+//             }
+
+//             tasks.forEach(async (task, index) => {
+//                 const suggestion = suggestions[index];
+//                 await updateTaskWithSuggestion(task._id, suggestion);
+//             });
+
+//             console.log(`Successfully processed suggestions for userId: ${userId}`);
+//         } catch (error) {
+//             console.error('Error processing tasks for userId:', userId, error);
+//         }
+//     });
+// };
+
 export const consumeTaskSuggestions = async () => {
     await consumeMessage('task_suggestion_queue', async (message) => {
         console.log('Received raw message:', message);
-        // const messageContent = JSON.parse(message.content.toString());
-        // const rawContent = message.content.toString();
-        // const messageContent = JSON.parse(rawContent);
-        // const parsedContent = parseMessageContent(messageContent);
-        // if (!parsedContent) {
-        //     console.error('Malformed message. Acknowledging and skipping.');
-        //     return acknowledgeMessage(message);
-        // }
 
-        // const [userId, suggestions] = parsedContent;
-
-        // // Log userId and suggestions for debugging
-        // console.log('Parsed userId:', userId);
-        // console.log('Parsed suggestions:', suggestions);
-        const userId = message?.userId
-        const suggestions = message?.suggestions
+        const userId = message?.userId;
+        const suggestions = message?.suggestions;
 
         try {
+            // Fetch all tasks for the user
             const tasks = await fetchTasksForUser(userId);
 
             if (!tasks || tasks.length === 0) {
@@ -332,10 +366,27 @@ export const consumeTaskSuggestions = async () => {
                 console.error('Mismatch in task and suggestion counts:', {
                     tasksLength: tasks.length,
                     suggestionsLength: suggestions.length,
-                }); 
+                });
             }
 
-            tasks.forEach(async (task, index) => {
+            // Get today's date
+            const today = new Date().toLocaleDateString(); // Current date in 'MM/DD/YYYY' format
+
+            // Filter tasks for the current date based on plannedStartTime and dueDate
+            const todaysTasks = tasks.filter(task => {
+                const taskPlannedDate = task.plannedStartTime.date ? new Date(task.plannedStartTime.date).toLocaleDateString() : null;
+                const taskDueDate = new Date(task.dueDate.startDate).toLocaleDateString();
+
+                // Check if plannedStartTime is today or if the dueDate is today
+                return (taskPlannedDate === today || taskDueDate === today);
+            });
+
+            if (todaysTasks.length === 0) {
+                console.warn('No tasks found for today.');
+            }
+
+            // Process only today's tasks
+            todaysTasks.forEach(async (task, index) => {
                 const suggestion = suggestions[index];
                 await updateTaskWithSuggestion(task._id, suggestion);
             });
@@ -347,14 +398,13 @@ export const consumeTaskSuggestions = async () => {
     });
 };
 
-
-
-
 // Example function to fetch tasks for a user
 const fetchTasksForUser = async (userId) => {
-    // Replace this with the actual logic to fetch tasks based on userId
-    return await Task.find({ userId: userId });
+    // Fetch tasks from MongoDB based on userId
+    return await Task.find({ userId: userId }).sort({ _id: asc });
 };
+
+
 
 // Example function to update task with the suggestion
 const updateTaskWithSuggestion = async (taskId, aiSuggestion) => {

@@ -39,8 +39,8 @@ const PORT = process.env.PORT || 5000;
 // }, {
 //     timezone: 'UTC', // Set the timezone if needed
 // });
-
-cron.schedule('0 0 * * *', async () => { // Adjust time based on User Service cron
+// cron.schedule('1 0 * * *', -> 12:01 AM every day) {
+cron.schedule('1 0 * * *', async () => { // Adjust time based on User Service cron
     console.log('Running daily routine to fetch user tasks and publish task list...');
 
     try {

@@ -79,8 +79,8 @@ app.post('/api/register', async (req, res) => {
 //         channel.ack(msg);
 //     });
 // };
-
-cron.schedule('0 0 * * *', async () => {
+// cron.schedule('1 0 * * *', -> 12:01 AM every day) {
+cron.schedule('1 0 * * *', async () => {
     console.log('Running daily job to publish user list...');
     await fetchAndPublishUserList();
 }, {
