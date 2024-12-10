@@ -8,9 +8,6 @@ router.get('/profile', protect, async (req, res) => {
     console.log("reached")
     res.json({ message: 'Welcome to your profile', user: req.user });
 });
-<<<<<<< Updated upstream
-
-=======
 router.put('/mood', protect, async (req, res) => {
     const { mood } = req.body;
 
@@ -29,5 +26,4 @@ router.put('/mood', protect, async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
->>>>>>> Stashed changes
 export default router;

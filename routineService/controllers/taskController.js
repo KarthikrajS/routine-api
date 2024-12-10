@@ -1,26 +1,18 @@
-<<<<<<< Updated upstream
-import Task from '../models/taskModel.js';
-=======
 // import { client } from '../index.js';
 // import { client } from '../middleware/index.js';
 import Task from '../models/taskModel.js';
 import { sendMessage } from '../utils/rabbitmq.js';
 import redisClient from '../utils/redisClient.js';
->>>>>>> Stashed changes
 
 // Create a new task
 const createTask = async (req, res) => {
     try {
         console.log(req.body, "req.body");
         const task = new Task(req.body);
-<<<<<<< Updated upstream
-
-        await task.save();
-=======
         await redisClient.del('tasks:*');
         await task.save();
         sendMessage('task_creation', task);
->>>>>>> Stashed changes
+        sendMessage('taskQueue', task);
         res.status(201).json({ message: "Task created Successfully", data: task });
     } catch (err) {
         console.log(err, "err");
@@ -28,18 +20,20 @@ const createTask = async (req, res) => {
     }
 };
 
+export const fetchTasksForUser = async (id) => {
+    try {
+        const tasks = await Task.find({ userId: id });
+        console.log(tasks, "_qwewqe");
+        return tasks;
+    } catch (error) {
+        console.error(`Error fetching tasks for user ${userId}:`, error);
+        return [];
+    }
+};
 // Get all tasks
 const getAllTasks = async (req, res) => {
     try {
-<<<<<<< Updated upstream
-        const tasks = await Task.find();
-        res.status(200).json(tasks);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-=======
-        const userId = req.user.id
+        const userId = req.user._id
         const { page = 1, limit = 10, view } = req.query;
         const cacheKey = `tasks:${userId}:${page}:${limit}`;
         // :${JSON.stringify(filters)}
@@ -72,17 +66,11 @@ const getAllTasks = async (req, res) => {
     }
 }
 
->>>>>>> Stashed changes
 
 // Update a task
 const updateTask = async (req, res) => {
     try {
         const { id } = req.params;
-<<<<<<< Updated upstream
-        const updatedTask = await Task.findByIdAndUpdate(id, req.body, { new: true });
-        if (!updatedTask) return res.status(404).json({ error: 'Task not found' });
-        res.status(200).json({message: 'Task updated successfully', data: updatedTask});
-=======
         const updatedTask = await Task.findOneAndUpdate({ _id: id, userId: req.user.id }, req.body, { new: true });
         if (!updatedTask) return res.status(404).json({ error: 'Task not found' });
         console.log(updatedTask, "updatedTask");
@@ -92,11 +80,11 @@ const updateTask = async (req, res) => {
         //to RL service - check wether the task is completed/deferred
         // sendMessage('taskQueue', updatedTask);
         // if (updatedTask?.status === "completed")
-        sendMessage('taskQueue', { tasks: [updatedTask] });
+        sendMessage('taskQueue', updatedTask);
+        
         await redisClient.del('tasks:*');
 
         res.status(200).json({ message: 'Task updated successfully', data: updatedTask });
->>>>>>> Stashed changes
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -106,13 +94,12 @@ const updateTask = async (req, res) => {
 const deleteTask = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedTask = await Task.findByIdAndDelete(id);
-<<<<<<< Updated upstream
-=======
+        // const deletedTask = await Task.findByIdAndDelete(id);
+        const deletedTask = await Task.findOneAndUpdate({ _id: id, userId: req.user.id }, req.body, { new: true });
         await redisClient.del('tasks:*');
->>>>>>> Stashed changes
         if (!deletedTask) return res.status(404).json({ error: 'Task not found' });
-        res.status(200).json({ message: 'Task deleted successfully' });
+        sendMessage('analysisQueue', deletedTask)
+        res.status(200).json({ message: 'Task deleted successfully' , data: deletedTask});
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
