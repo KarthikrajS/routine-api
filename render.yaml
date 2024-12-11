@@ -16,16 +16,15 @@ services:
     dockerContext: ./routineService
     envVars:
       - key: RABBITMQ_URL
-        value: amqp://guest:guest@rabbitmq-069y.onrender.com:5672 
+        value: amqp://guest:guest@rabbitmq-069y.onrender.com:5672
       - key: JWT_SECRET
-        value: 'routine_secret'
+        value: "routine_secret"
       - key: REDIS_URL
         value: redis://red-ctcsg1tds78s739k5l50:6379
       - key: USER_SERVICE_URL
         value: https://routine-user-service.onrender.com
       - key: MONGO_URI
         value: mongodb+srv://karthikrajcode:neverSettle20@microservices.72r7cq6.mongodb.net/routinesApp?retryWrites=true&w=majority
-        
 
   - name: user-service
     type: web
@@ -36,9 +35,9 @@ services:
       - key: MONGO_URI
         value: mongodb+srv://karthikrajcode:neverSettle20@microservices.72r7cq6.mongodb.net/routinesApp?retryWrites=true&w=majority
       - key: RABBITMQ_URL
-        value: amqp://guest:guest@rabbitmq-069y.onrender.com:5672 
+        value: amqp://guest:guest@rabbitmq-069y.onrender.com:5672
       - key: JWT_SECRET
-        value: 'routine_secret'
+        value: "routine_secret"
 
   - name: rl-service
     type: web
@@ -64,7 +63,7 @@ services:
 
   # RabbitMQ
   - name: rabbitmq
-    type: private_service
+    type: web
     env: docker
     dockerCommand: |
       docker run -d --name rabbitmq --hostname rabbitmq-host -e RABBITMQ_DEFAULT_USER=guest -e RABBITMQ_DEFAULT_PASS=guest -p 5672:5672 -p 15672:15672 rabbitmq:management
