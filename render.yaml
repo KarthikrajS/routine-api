@@ -72,8 +72,9 @@ services:
         value: guest
       - key: RABBITMQ_DEFAULT_PASS
         value: guest
-    ipAllowList:
-      - "0.0.0.0/0"
+    ipAllowList: # Required
+      - source: 0.0.0.0/0
+        description: everywhere
     plan: free
     
 
