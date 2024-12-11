@@ -2,9 +2,9 @@
 
 import redis from 'redis';
 
+const url = process.env.REDIS_URL
 const redisClient = redis.createClient({
-    host: 'localhost', // Docker Redis container host
-    port: 6379, // Default Redis port
+    url
 });
 
 

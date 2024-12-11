@@ -1,0 +1,81 @@
+services:
+  # Frontend
+  - name: routine-front-end
+    type: web
+    env: static
+    repo: https://github.com/KarthikrajS/routine-api
+    buildCommand: npm install && npm run build
+    staticPublishPath: build/
+    autoDeploy: true
+
+  # Backend Services
+  - name: routine-service
+    type: web
+    env: docker
+    repo: https://github.com/KarthikrajS/routine-api
+    dockerContext: ./routineService
+    envVars:
+      - key: RABBITMQ_URL
+        value: https://rabbitmq-069y.onrender.com/5672
+      - key: JWT_SECRET
+        value: 'routine_secret'
+      - key: REDIS_URL
+        value: redis://red-ctcsg1tds78s739k5l50:6379
+      - key: USER_SERVICE_URL
+        value: https://routine-user-service.onrender.com
+      - key: MONGO_URI
+        value: mongodb+srv://karthikrajcode:neverSettle20@microservices.72r7cq6.mongodb.net/routinesApp?retryWrites=true&w=majority
+        
+
+  - name: user-service
+    type: web
+    env: docker
+    repo: https://github.com/KarthikrajS/routine-api
+    dockerContext: ./userService
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://karthikrajcode:neverSettle20@microservices.72r7cq6.mongodb.net/routinesApp?retryWrites=true&w=majority
+      - key: RABBITMQ_URL
+        value: https://rabbitmq-069y.onrender.com/5672
+      - key: JWT_SECRET
+        value: 'routine_secret'
+
+  - name: rl-service
+    type: web
+    env: docker
+    repo: https://github.com/KarthikrajS/routine-api
+    dockerContext: ./rl_service
+    envVars:
+      - key: REDIS_URL
+        value: redis://red-ctcsg1tds78s739k5l50:6379
+
+  - name: gateway
+    type: web
+    env: docker
+    repo: https://github.com/KarthikrajS/routine-api
+    dockerContext: ./gateway
+    envVars:
+      - key: ROUTINE_SERVICE_URL
+        value: https://routine-service.onrender.com
+      - key: USER_SERVICE_URL
+        value: https://user-service.onrender.com
+      - key: RL_SERVICE_URL
+        value: https://rl-service.onrender.com
+
+  # RabbitMQ
+  - name: rabbitmq
+    type: web
+    env: docker
+    dockerCommand: |
+      docker run -d --name rabbitmq --hostname rabbitmq-host -e RABBITMQ_DEFAULT_USER=guest -e RABBITMQ_DEFAULT_PASS=guest -p 5672:5672 -p 15672:15672 rabbitmq:management
+    envVars:
+      - key: RABBITMQ_DEFAULT_USER
+        value: guest
+      - key: RABBITMQ_DEFAULT_PASS
+        value: guest
+    plan: free
+
+  # Redis
+  - name: redis
+    type: redis
+    plan: free
