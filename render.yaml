@@ -72,7 +72,10 @@ services:
         value: guest
       - key: RABBITMQ_DEFAULT_PASS
         value: guest
+    ipAllowList:
+      - "0.0.0.0/0"
     plan: free
+    
 
   # Redis
   - name: redis
