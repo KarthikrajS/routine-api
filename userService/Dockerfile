@@ -1,5 +1,5 @@
 FROM node:18
-WORKDIR /app
+WORKDIR .
 COPY userService/package.json ./
 RUN npm install
 COPY . .

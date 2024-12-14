@@ -1,5 +1,5 @@
 # FROM python:3.9
-# WORKDIR /app
+# WORKDIR .
 # COPY requirements.txt ./
 # RUN pip install -r requirements.txt
 # COPY . .
@@ -12,7 +12,7 @@
 FROM python:3.9
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR .
 
 # Copy the requirements file to the working directory
 COPY  rl_service/requirements.txt .
