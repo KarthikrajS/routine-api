@@ -16,9 +16,9 @@ app.use(cors())
 app.use('/users', proxy(USER_SERVICE_URL));
 app.use('/tasks', proxy(ROUTINE_SERVICE_URL));
 app.use('/rl', proxy(RL_SERVICE_URL));
-app.get('/health', (res, res)=>{
-    return res.status(200).send({ status: 'ok' });
-})
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
 
 // Start the Gateway

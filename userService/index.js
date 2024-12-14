@@ -43,9 +43,9 @@ const getRabbitMQChannel = () => {
     if (!channel) throw new Error('RabbitMQ channel is not initialized');
     return channel;
 };
-app.get('/health', (res, res)=>{
-    return res.status(200).send({ status: 'ok' });
-})
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 // Register routes
 app.use('/api/auth', authRoutes);
 

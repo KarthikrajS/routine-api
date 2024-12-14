@@ -74,9 +74,9 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-app.get('/health', (res, res)=>{
-    return res.status(200).send({ status: 'ok' });
-})
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 // Routes
 app.use('/tasks', taskRoutes);
 
