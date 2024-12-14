@@ -9,7 +9,7 @@
 
 
 # Use an official Python base image
-FROM python:3.9
+FROM python:3.9-slim
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -18,7 +18,7 @@ WORKDIR /app
 COPY  rl_service/requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire application code to the container
 COPY rl_service/ .
