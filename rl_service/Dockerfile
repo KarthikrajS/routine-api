@@ -15,7 +15,7 @@ FROM python:3.9
 WORKDIR /app
 
 # Copy the requirements file to the working directory
-COPY COPY rl-service/requirements.txt ./
+COPY  rl-service/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
