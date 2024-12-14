@@ -6,6 +6,7 @@ import pika
 import json
 import threading
 import os
+import time
 
 # RabbitMQ Connection Parameters
 RABBITMQ_URL = os.getenv("RABBITMQ_URL","amqp://guest:guest@localhost:5672")
@@ -104,32 +105,43 @@ def process_feedback_message(feedback_message):
 #     channel.start_consuming()
 
 def start_consumer():
-    connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
-    channel = connection.channel()
-    channel.queue_declare(queue='task_list', durable=True)
-
-    def callback(ch, method, properties, body):
+    max_retries = 5
+    retry_delay = 5 
+    for attempt in range(max_retries):
         try:
-            print(f"Received message: {body}")
-            process_task_message(body)  # Process the message
-            ch.basic_ack(delivery_tag=method.delivery_tag)  # Acknowledge the message
-        except Exception as e:
-            print(f"Error processing message: {e}")
-            # Optionally, do not ack the message so it can be retried
+            connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+            channel = connection.channel()
+            channel.queue_declare(queue='task_list', durable=True)
 
-    channel.basic_qos(prefetch_count=1)  # Fair dispatch
-    channel.basic_consume(queue=TASK_QUEUE, on_message_callback=callback)
+            def callback(ch, method, properties, body):
+                try:
+                    print(f"Received message: {body}")
+                    process_task_message(body)  # Process the message
+                    ch.basic_ack(delivery_tag=method.delivery_tag)  # Acknowledge the message
+                except Exception as e:
+                    print(f"Error processing message: {e}")
+                    # Optionally, do not ack the message so it can be retried
 
-    print("Starting consumer. Waiting for messages...")
-    try:
-        channel.start_consuming()
-    except KeyboardInterrupt:
-        print("Consumer stopped by user.")
-    except Exception as e:
-        print(f"Consumer error: {e}")
-    finally:
-        channel.close()
-        connection.close()
+            channel.basic_qos(prefetch_count=1)  # Fair dispatch
+            channel.basic_consume(queue=TASK_QUEUE, on_message_callback=callback)
+
+            print("Starting consumer. Waiting for messages...")
+            try:
+                channel.start_consuming()
+            except KeyboardInterrupt:
+                print("Consumer stopped by user.")
+            except Exception as e:
+                print(f"Consumer error: {e}")
+            finally:
+                channel.close()
+                connection.close()
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"Connection attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
+            else:
+                print("Max retries reached. Unable to connect to RabbitMQ.")
+                raise
         
 @asynccontextmanager
 async def lifespan(app: FastAPI):
