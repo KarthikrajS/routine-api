@@ -6,7 +6,7 @@ services:
     repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./userService/Dockerfile
     healthCheckPath: /health
-    plan: starter
+    plan: free
     autoDeploy: true
     envVars:
       - key: RABBITMQ_URL
@@ -23,7 +23,7 @@ services:
     repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./routineService/Dockerfile
     healthCheckPath: /health
-    plan: starter
+    plan: free
     autoDeploy: true
     envVars:
       - key: RABBITMQ_URL
@@ -42,7 +42,7 @@ services:
     repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./rl_service/Dockerfile
     healthCheckPath: /health
-    plan: starter
+    plan: free
     autoDeploy: true
     envVars:
       - key: RABBITMQ_URL
@@ -57,7 +57,7 @@ services:
     repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./gateway/Dockerfile
     healthCheckPath: /health
-    plan: starter
+    plan: free
     autoDeploy: true
     envVars:
       - key: ROUTINE_SERVICE_URL
@@ -78,7 +78,7 @@ services:
         value: guest
       - key: RABBITMQ_DEFAULT_PASS
         value: guest
-    plan: starter
+    plan: free
 
   # Redis Service
   - name: redis
