@@ -1,9 +1,13 @@
 services:
+  # User Service
   - name: user-service
     type: web
-    env: docker
-    plan: starter
+    runtime: docker
+    repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./userService/Dockerfile
+    healthCheckPath: /health
+    plan: starter
+    autoDeploy: true
     envVars:
       - key: RABBITMQ_URL
         value: amqp://guest:guest@rabbitmq:5672
@@ -11,15 +15,16 @@ services:
         value: mongodb+srv://karthikrajcode:neverSettle20@microservices.72r7cq6.mongodb.net/routinesApp?retryWrites=true&w=majority
       - key: JWT_SECRET
         value: routine_secret
-    buildCommand: docker build -t user-service .
-    startCommand: docker run -p 8001:8001 user-service
-    autoDeploy: true
 
+  # Routine Service
   - name: routine-service
     type: web
-    env: docker
-    plan: starter
+    runtime: docker
+    repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./routineService/Dockerfile
+    healthCheckPath: /health
+    plan: starter
+    autoDeploy: true
     envVars:
       - key: RABBITMQ_URL
         value: amqp://guest:guest@rabbitmq:5672
@@ -29,29 +34,31 @@ services:
         value: mongodb+srv://karthikrajcode:neverSettle20@microservices.72r7cq6.mongodb.net/routinesApp?retryWrites=true&w=majority
       - key: JWT_SECRET
         value: routine_secret
-    buildCommand: docker build -t routine-service .
-    startCommand: docker run -p 8002:8002 routine-service
-    autoDeploy: true
 
+  # RL Service
   - name: rl-service
     type: web
-    env: docker
-    plan: starter
+    runtime: docker
+    repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./rl_service/Dockerfile
+    healthCheckPath: /health
+    plan: starter
+    autoDeploy: true
     envVars:
       - key: RABBITMQ_URL
         value: amqp://guest:guest@rabbitmq:5672
       - key: REDIS_URL
         value: redis://redis:6379
-    buildCommand: docker build -t rl-service .
-    startCommand: docker run -p 8003:8003 rl-service
-    autoDeploy: true
 
+  # Gateway Service
   - name: gateway
     type: web
-    env: docker
-    plan: starter
+    runtime: docker
+    repo: https://github.com/KarthikrajS/routine-api.git
     dockerfilePath: ./gateway/Dockerfile
+    healthCheckPath: /health
+    plan: starter
+    autoDeploy: true
     envVars:
       - key: ROUTINE_SERVICE_URL
         value: http://routine-service:8002
@@ -59,32 +66,24 @@ services:
         value: http://user-service:8001
       - key: RL_SERVICE_URL
         value: http://rl-service:8003
-    buildCommand: docker build -t gateway .
-    startCommand: docker run -p 8000:8000 gateway
-    autoDeploy: true
 
+  # RabbitMQ Service
   - name: rabbitmq
-    type: background
-    env: docker
-    plan: starter
-    dockerfilePath: null
-    dockerImage: rabbitmq:management
-    startCommand: >
-      docker run -d --hostname rabbitmq-host --name rabbitmq
-      -p 5672:5672 -p 15672:15672 rabbitmq:management
+    type: pserv
+    runtime: docker
+    repo: https://github.com/KarthikrajS/routine-api.git
+    dockerCommand: rabbitmq:management
     envVars:
       - key: RABBITMQ_DEFAULT_USER
-        value: ${RABBITMQ_DEFAULT_USER}
+        value: guest
       - key: RABBITMQ_DEFAULT_PASS
-        value: ${RABBITMQ_DEFAULT_PASS}
-    autoDeploy: true
-
-  - name: redis
-    type: background
-    env: docker
+        value: guest
     plan: starter
-    dockerfilePath: null
-    dockerImage: redis:latest
-    startCommand: >
-      docker run -d --name redis -p 6379:6379 redis
-    autoDeploy: true
+
+  # Redis Service
+  - name: redis
+    type: redis
+    plan: free
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: Allow all
