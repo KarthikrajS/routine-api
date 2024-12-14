@@ -69,7 +69,7 @@ services:
 
   # RabbitMQ Service
   - name: rabbitmq
-    type: pserv
+    type: web
     runtime: docker
     repo: https://github.com/KarthikrajS/routine-api.git
     dockerCommand: rabbitmq:management
