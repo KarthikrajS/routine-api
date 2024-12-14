@@ -1,6 +1,7 @@
 import pika
 import json
 from rl_model import train_model, get_suggestions
+RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672")
 
 def process_task_update(ch, method, properties, body):
     try:
@@ -38,7 +39,7 @@ def publish_suggestions(user_id, suggestions):
     message = [str(user_id), suggestions]  # Convert ObjectId to string if needed
     
     # Publish the message to RabbitMQ
-    connection = pika.BlockingConnection(pika.ConnectionParameters('amqp://0.0.0.0:5672'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_URL))
     channel = connection.channel()
     queue = 'task_suggestion_queue'
     
@@ -54,7 +55,7 @@ def publish_suggestions(user_id, suggestions):
     print(f"Published message to 1 {queue}: {message}")
     connection.close()
 
-connection = pika.BlockingConnection(pika.ConnectionParameters('amqp://0.0.0.0:5672'))
+connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_URL))
 channel = connection.channel()
 
 channel.queue_declare(queue='taskQueue', durable=True)

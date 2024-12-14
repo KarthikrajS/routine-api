@@ -12,6 +12,8 @@ export const connectRabbitMQ = async () => {
     await channel.assertQueue('task_updates', { durable: true });
     await channel.assertQueue('user_list_queue', { durable: true });
 
+    await channel.assertQueue('user_events', { durable: true });
+
 
     channel.consume('task_creation', (msg) => {
         const task = JSON.parse(msg.content.toString());

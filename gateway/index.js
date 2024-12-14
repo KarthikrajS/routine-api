@@ -8,13 +8,13 @@ dotenv.config();
 const app = express();
 
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:8001';
-const TASK_SERVICE_URL = process.env.TASK_SERVICE_URL || 'http://localhost:8002';
+const ROUTINE_SERVICE_URL = process.env.ROUTINE_SERVICE_URL || 'http://localhost:8002';
 
 const RL_SERVICE_URL = process.env.RL_SERVICE_URL || 'http://localhost:8003';
 app.use(cors())
 // Proxy routes
 app.use('/users', proxy(USER_SERVICE_URL));
-app.use('/tasks', proxy(TASK_SERVICE_URL));
+app.use('/tasks', proxy(ROUTINE_SERVICE_URL));
 app.use('/rl', proxy(RL_SERVICE_URL));
 
 
