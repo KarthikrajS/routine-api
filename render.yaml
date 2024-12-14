@@ -64,7 +64,7 @@ services:
     autoDeploy: true
 
   - name: rabbitmq
-    type: private
+    type: background
     env: docker
     plan: starter
     dockerfilePath: null
@@ -80,7 +80,7 @@ services:
     autoDeploy: true
 
   - name: redis
-    type: private
+    type: background
     env: docker
     plan: starter
     dockerfilePath: null
