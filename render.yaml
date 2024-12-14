@@ -72,7 +72,8 @@ services:
     type: web
     runtime: docker
     repo: https://github.com/KarthikrajS/routine-api.git
-    healthCheckPath: /
+    dockerfilePath: ./Dockerfile
+    dockerCommand: rabbitmq:management
     plan: free
     autoDeploy: true
     envVars:
@@ -80,10 +81,7 @@ services:
         value: guest
       - key: RABBITMQ_DEFAULT_PASS
         value: guest
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: Allow All (Update this for security if required)
-
+   
   # Redis Service
   - name: redis
     type: redis
