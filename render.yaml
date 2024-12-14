@@ -71,16 +71,18 @@ services:
   - name: rabbitmq
     type: web
     runtime: docker
-    repo: https://github.com/KarthikrajS/routine-api.git
-    rootDir: ./rabbitmq
-    dockerfilePath: ./rabbitmq/Dockerfile
-    plan: free
-    autoDeploy: true
+    dockerCommand: rabbitmq:management
     envVars:
       - key: RABBITMQ_DEFAULT_USER
         value: guest
       - key: RABBITMQ_DEFAULT_PASS
         value: guest
+    disk:
+      name: rabbitmq-data
+      mountPath: /var/lib/rabbitmq
+      sizeGB: 10
+    plan: free
+
    
   # Redis Service
   - name: redis
