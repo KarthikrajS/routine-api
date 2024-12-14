@@ -72,7 +72,6 @@ services:
     type: web
     runtime: docker
     repo: https://github.com/KarthikrajS/routine-api.git
-    dockerfilePath: ./rabbitmq/Dockerfile
     healthCheckPath: /
     plan: free
     autoDeploy: true
