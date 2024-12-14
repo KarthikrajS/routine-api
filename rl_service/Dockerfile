@@ -12,7 +12,7 @@
 FROM python:3.9
 
 # Set the working directory inside the container
-WORKDIR .
+WORKDIR /app
 
 # Copy the requirements file to the working directory
 COPY  rl_service/requirements.txt .
