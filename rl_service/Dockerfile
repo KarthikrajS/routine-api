@@ -21,7 +21,7 @@ COPY  rl_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire application code to the container
-COPY . .
+COPY rl_service/ .
 
 # Expose the service port (ensure it matches the one in your app)
 EXPOSE 8003
