@@ -72,8 +72,8 @@ services:
     type: web
     runtime: docker
     repo: https://github.com/KarthikrajS/routine-api.git
-    dockerfilePath: ./Dockerfile
-    dockerCommand: rabbitmq:management
+    rootDir: ./rabbitmq
+    dockerfilePath: ./rabbitmq/Dockerfile
     plan: free
     autoDeploy: true
     envVars:
