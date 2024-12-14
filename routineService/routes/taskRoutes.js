@@ -3,6 +3,7 @@ import { createTask, getAllTasks, updateTask, deleteTask } from '../controllers/
 import {authMiddleware,  cacheMiddleware } from '../middleware/index.js';
 const router = express.Router();
 
+
 router.post('/', authMiddleware, createTask);            // Create a new task
 router.get('/', authMiddleware, cacheMiddleware, getAllTasks);            // Get all tasks
 router.put('/:id', authMiddleware, updateTask);          // Update a task

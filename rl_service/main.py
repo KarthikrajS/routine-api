@@ -142,6 +142,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 @app.get("/suggestions/{period}")
 async def get_analysis_suggestions(period: str):
     global daily_task_data
