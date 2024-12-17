@@ -9,7 +9,7 @@ import os
 import time
 
 # RabbitMQ Connection Parameters
-RABBITMQ_URL = os.getenv("RABBITMQ_URL","amqp://guest:guest@localhost:5672")
+RABBITMQ_URL = "amqp://guest:guest@rabbitmq-1-t1xx.onrender.com:5672"
 TASK_QUEUE = "taskQueue"
 ANALYSIS_QUEUE = "analysisQueue"
 TASK_SUGGESTION_QUEUE = "task_suggestion_queue"
