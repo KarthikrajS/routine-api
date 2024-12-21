@@ -10,6 +10,7 @@ import time
 import asyncio
 from aio_pika import connect_robust, Message, IncomingMessage, ExchangeType
 # RabbitMQ Connection Parameters
+
 RABBITMQ_URL = "amqp://guest:guest@rabbitmq-1-t1xx.onrender.com:5672"
 TASK_QUEUE = "taskQueue"
 ANALYSIS_QUEUE = "analysisQueue"
@@ -111,7 +112,10 @@ async def start_consumer():
 
     for attempt in range(max_retries):
         try:
+            print(f"Attempting connection to RabbitMQ at {RABBITMQ_URL}")
             connection = await connect_robust(RABBITMQ_URL)
+            print("Successfully connected to RabbitMQ")
+            # connection = await connect_robust(RABBITMQ_URL)
             async with connection:
                 print("Connected to RabbitMQ.")
                 channel = await connection.channel()
@@ -122,6 +126,7 @@ async def start_consumer():
                 print("Starting consumer. Waiting for messages...")
                 async for message in queue:
                     async with message.process():
+                        print(f"Processing message: {message.body.decode()}")
                         try:
                             await process_task_message(message.body)
                         except Exception as e:
