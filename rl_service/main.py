@@ -11,7 +11,7 @@ import asyncio
 from aio_pika import connect_robust, Message, IncomingMessage, ExchangeType
 # RabbitMQ Connection Parameters
 
-RABBITMQ_URL = "amqp://guest:guest@rabbitmq-1-t1xx.onrender.com:5672"
+RABBITMQ_URL = "amqps://aedzelrz:WyaTGqjpwTkTlac4KeY6l4qCcCIvobca@campbell.lmq.cloudamqp.com/aedzelrzπ"
 TASK_QUEUE = "taskQueue"
 ANALYSIS_QUEUE = "analysisQueue"
 TASK_SUGGESTION_QUEUE = "task_suggestion_queue"
