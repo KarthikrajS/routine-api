@@ -6,6 +6,9 @@ import pika
 import json
 import threading
 import os
+import time
+import asyncio
+from aio_pika import connect_robust, Message, IncomingMessage, ExchangeType
 
 # RabbitMQ Connection Parameters
 RABBITMQ_URL = os.getenv("RABBITMQ_URL","amqps://aedzelrz:WyaTGqjpwTkTlac4KeY6l4qCcCIvobca@campbell.lmq.cloudamqp.com/aedzelrz")
@@ -18,15 +21,15 @@ daily_task_data = []
 daily_user_feedback = []
 
 
-def connect_rabbitmq(queue_name):
-    connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+async def connect_rabbitmq(queue_name):
+    connection = await connect_robust(RABBITMQ_URL)
     channel = connection.channel()
     channel.queue_declare(queue=queue_name, durable=True)
     return channel
 
 
 def publish_message(queue_name, message):
-    channel = connect_rabbitmq(queue_name)
+    channel = asyncio.run(connect_rabbitmq(queue_name))
     try:
         encoded_message = json.dumps(message)
         channel.basic_publish(
@@ -102,43 +105,52 @@ def process_feedback_message(feedback_message):
 #     channel.basic_consume(queue=TASK_QUEUE, on_message_callback=callback)
 #     print('Waiting for messages...')
 #     channel.start_consuming()
+async def start_consumer():
+    """Start the RabbitMQ consumer."""
+    max_retries = 5
+    retry_delay = 5  # seconds
 
-def start_consumer():
-    connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
-    channel = connection.channel()
-    channel.queue_declare(queue='task_list', durable=True)
-
-    def callback(ch, method, properties, body):
+    for attempt in range(max_retries):
         try:
-            print(f"Received message: {body}")
-            process_task_message(body)  # Process the message
-            ch.basic_ack(delivery_tag=method.delivery_tag)  # Acknowledge the message
+            connection = await connect_robust(RABBITMQ_URL)
+            async with connection:
+                print("Connected to RabbitMQ.")
+                channel = await connection.channel()
+                await channel.set_qos(prefetch_count=1)
+
+                queue = await channel.declare_queue(TASK_QUEUE, durable=True)
+
+                print("Starting consumer. Waiting for messages...")
+                async for message in queue:
+                    async with message.process():
+                        try:
+                            process_task_message(message.body)
+                        except Exception as e:
+                            print(f"Error processing message: {e}")
+
         except Exception as e:
-            print(f"Error processing message: {e}")
-            # Optionally, do not ack the message so it can be retried
+            print(f"Connection attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
+            else:
+                print("Max retries reached. Unable to connect to RabbitMQ.")
+                raise
 
-    channel.basic_qos(prefetch_count=1)  # Fair dispatch
-    channel.basic_consume(queue=TASK_QUEUE, on_message_callback=callback)
 
-    print("Starting consumer. Waiting for messages...")
-    try:
-        channel.start_consuming()
-    except KeyboardInterrupt:
-        print("Consumer stopped by user.")
-    except Exception as e:
-        print(f"Consumer error: {e}")
-    finally:
-        channel.close()
-        connection.close()
-        
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Manage application lifespan, including the RabbitMQ consumer."""
     print("Starting RabbitMQ consumer...")
-    consumer_thread = threading.Thread(target=start_consumer, daemon=True)
-    consumer_thread.start()
-    yield
-    print("Stopping RabbitMQ consumer...")
-
+    consumer_task = asyncio.create_task(start_consumer())
+    try:
+        yield
+    finally:
+        print("Stopping RabbitMQ consumer...")
+        consumer_task.cancel()
+        try:
+            await consumer_task
+        except asyncio.CancelledError:
+            print("Consumer task cancelled.")
 
 app = FastAPI(lifespan=lifespan)
 
