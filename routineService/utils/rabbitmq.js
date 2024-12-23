@@ -425,7 +425,7 @@ export const consumeTaskSuggestions = async () => {
 // Example function to fetch tasks for a user
 const fetchTasksForUser = async (userId) => {
     // Fetch tasks from MongoDB based on userId
-    return await Task.find({ userId: userId }).sort({ _id: asc });
+    return await Task.find({ userId: userId }).sort({ _id: 1 });
 };
 
 
