@@ -163,29 +163,53 @@ import { getAllTasks } from '../controllers/taskController.js';
 import Task from '../models/taskModel.js';
 
 // Function to fetch the user list from RabbitMQ
+// export const fetchUserList = async () => {
+//     const channel = getRabbitMQChannel();
+//     const userList = [];
+
+//     try {
+//         await channel.consume('user_list_queue', (message) => {
+//             const user = JSON.parse(message.content.toString());
+//             console.log('Received user:', user);
+//             userList.push(user);
+
+//             // Acknowledge the message after processing
+//             channel.ack(message);
+//         }, { noAck: false });
+
+//         return new Promise((resolve) => {
+//             // Wait for all messages to be consumed before resolving
+//             setTimeout(() => resolve(userList), 5000); // 5-second buffer
+//         });
+//     } catch (error) {
+//         console.error('Error fetching user list:', error);
+//         throw error;
+//     }
+// };
+
+//simplifying
 export const fetchUserList = async () => {
     const channel = getRabbitMQChannel();
     const userList = [];
 
     try {
-        await channel.consume('user_list_queue', (message) => {
+        while (true) {
+            const message = await channel.get('user_list_queue', { noAck: false });
+            if (!message) break; // Exit loop when the queue is empty
+
             const user = JSON.parse(message.content.toString());
             console.log('Received user:', user);
             userList.push(user);
+            channel.ack(message); // Acknowledge message
+        }
 
-            // Acknowledge the message after processing
-            channel.ack(message);
-        }, { noAck: false });
-
-        return new Promise((resolve) => {
-            // Wait for all messages to be consumed before resolving
-            setTimeout(() => resolve(userList), 5000); // 5-second buffer
-        });
+        return userList;
     } catch (error) {
         console.error('Error fetching user list:', error);
         throw error;
     }
 };
+
 
 // Function to publish task list for all users
 // export const publishTaskListForAllUsers = async () => {
