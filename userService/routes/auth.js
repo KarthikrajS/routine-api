@@ -1,7 +1,9 @@
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/userController.js';
+import { registerUser, loginUser, googleLogin } from '../controllers/userController.js';
 import { body, validationResult } from "express-validator"
 import jwt from 'jsonwebtoken';
+
+
 const router = express.Router();
 
 // Register route
@@ -43,6 +45,7 @@ router.post('/login', [
     }
     try {
         const { email, password } = req.body;
+        console.log(email, password, "email, password ");
         const response = await loginUser(email, password);
         if (response?.status) {
             return res.json({ token: response?.token });
@@ -52,5 +55,8 @@ router.post('/login', [
         return res.status(400).json({ message: error.message });
     }
 });
+
+
+router.post('/google-login', googleLogin);
 
 export default router;
