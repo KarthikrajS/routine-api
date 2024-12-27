@@ -23,11 +23,14 @@ daily_task_data = []
 daily_user_feedback = []
 
 
-async def connect_rabbitmq(queue_name):
-    connection = await connect_robust(RABBITMQ_URL)
-    channel = connection.channel()
-    channel.queue_declare(queue=queue_name, durable=True)
-    return channel
+# async def connect_rabbitmq(queue_name):
+#     connection = await connect_robust(RABBITMQ_URL)
+#     channel = connection.channel()
+#     channel.queue_declare(queue=queue_name, durable=True)
+#     return channel
+async def connect_rabbitmq():
+    """Establish a robust RabbitMQ connection."""
+    return await connect_robust(RABBITMQ_URL)
 
 
 # def publish_message(queue_name, message):
@@ -43,16 +46,27 @@ async def connect_rabbitmq(queue_name):
 #         print(f"Published message to {queue_name}: {encoded_message}")
 #     finally:
 #         channel.close()
-async def publish_message(queue_name: str, message: List[Any]):
+# async def publish_message(queue_name: str, message: List[Any]):
    
-    connection = await aio_pika.connect_robust(RABBITMQ_URL)
+#     connection = await aio_pika.connect_robust(RABBITMQ_URL)
+#     async with connection:
+#         channel = await connection.channel()
+#         queue = await channel.declare_queue(queue_name, durable=True)
+#         await channel.default_exchange.publish(
+#             aio_pika.Message(body=json.dumps(message).encode()),
+#             routing_key=queue.name
+#         )
+async def publish_message(queue_name: str, message: dict):
+    """Publish a message to a RabbitMQ queue."""
+    connection = await connect_rabbitmq()
     async with connection:
         channel = await connection.channel()
         queue = await channel.declare_queue(queue_name, durable=True)
         await channel.default_exchange.publish(
-            aio_pika.Message(body=json.dumps(message).encode()),
+            Message(body=json.dumps(message).encode()),
             routing_key=queue.name
         )
+        print(f"Message published to {queue_name}: {message}")
 
 async def process_task_list_message(body: bytes):
     """
@@ -246,16 +260,36 @@ async def consume_task_list_queue(queue):
                 except Exception as e:
                     print(f"Error processing task_list message: {e}")
 
+async def consume_messages():
+    """Consume messages from the RabbitMQ task queue."""
+    connection = await connect_rabbitmq()
+    async with connection:
+        channel = await connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        queue = await channel.declare_queue(TASK_QUEUE, durable=True)
+
+        async with queue.iterator() as queue_iter:
+            async for message in queue_iter:
+                async with message.process():
+                    try:
+                        task_data = json.loads(message.body.decode())
+                        print(f"Received task data: {task_data}")
+                        # Process task here
+                        await publish_message(TASK_SUGGESTION_QUEUE, {"status": "processed"})
+                    except Exception as e:
+                        print(f"Error processing message: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifespan, including the RabbitMQ consumer."""
     print("Starting RabbitMQ consumer...")
-    consumer_task = asyncio.create_task(start_consumer())
+    # consumer_task = asyncio.create_task(start_consumer())
+    consumer_task = asyncio.create_task(consume_messages())
     try:
         yield
     finally:
-        print("Stopping RabbitMQ consumer...")
+        print("Shutting down consumers...")
         consumer_task.cancel()
         try:
             await consumer_task
