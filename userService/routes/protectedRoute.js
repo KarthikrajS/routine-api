@@ -10,6 +10,12 @@ router.get('/profile', protect, async (req, res) => {
     res.json({ message: 'Welcome to your profile', user: req.user });
 });
 
+router.get('/rewards', protect, async (req, res) => {
+    const user = req.user;
+    console.log(user, "asdsad");
+    //return count: 0, lastUpdated: null
+    res.json({streak:{ count: user.streak, lastUpdated: user.lastCompletedDay, message: 'Rewards are coming soon!'} });
+});
 router.put('/mood', protect, async (req, res) => {
     const { mood } = req.body;
 
