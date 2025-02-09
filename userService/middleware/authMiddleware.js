@@ -19,7 +19,7 @@ import User from '../models/User.js';
 //     }
 // };
 export const protect = async (req, res, next) => {
-    console.log("Headers:", req.headers); // Debug headers
+    // console.log("Headers:", req.headers); // Debug headers
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -28,7 +28,7 @@ export const protect = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(decoded, "decoded");
+        // console.log(decoded, "decoded");
         const user = await User.findById(decoded?.id)
         console.log("user", user);
         req.user = user; // Attach user data to the request object

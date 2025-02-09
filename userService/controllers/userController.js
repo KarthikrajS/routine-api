@@ -28,6 +28,36 @@ export const loginUser = async (email, password) => {
     return { status: true, token };
 };
 
+export const getUserStats = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId, "streak progress");
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.status(200).json({ streak: user.streak, progress: user.progress });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const getUserRewards = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({
+            rewards: user.rewards,
+            streak: user.streak,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
 
 export const googleLogin = async (req, res) => {
     try {

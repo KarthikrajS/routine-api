@@ -1,30 +1,30 @@
-# FROM python:3.9
-# WORKDIR .
-# COPY requirements.txt ./
-# RUN pip install -r requirements.txt
-# COPY . .
-# EXPOSE 8003
+FROM python:3.9
+WORKDIR .
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 8003
 
-# CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]
 
 
 # Use an official Python slim image for smaller build size
-FROM python:3.9-slim
+# FROM python:3.9-slim
 
-# Set the working directory inside the container
-WORKDIR /app
+# # Set the working directory inside the container
+# WORKDIR /app
 
-# Copy and install Python dependencies
-COPY rl_service/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# # Copy and install Python dependencies
+# COPY rl_service/requirements.txt .
+# RUN pip install --no-cache-dir --upgrade pip \
+#     && pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code to the container
-COPY rl_service/ .
+# # Copy the rest of the application code to the container
+# COPY rl_service/ .
 
-# Expose the service port
-EXPOSE 8003
+# # Expose the service port
+# EXPOSE 8003
 
-# Command to run the FastAPI app with Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]
+# # Command to run the FastAPI app with Uvicorn
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]
 

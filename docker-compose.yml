@@ -56,7 +56,7 @@ services:
       - "8000:8000"
     environment:
       - ROUTINE_SERVICE_URL=http://routine-service:8002
-      - USER_SERVICE_URL=http://user-service:8001
+      - USER_SERVICE_URL=https://rl-service-uldq.onrender.com
       - RL_SERVICE_URL=http://rl-service:8003
     depends_on:
       - user-service

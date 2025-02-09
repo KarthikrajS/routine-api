@@ -86,20 +86,46 @@ const getAllTasks = async (req, res) => {
 }
 
 
+const fetchTasksForDate = async (userId, date) => {
+    const tasks = await Task.find({ userId });
+    const formattedDate = new Date(date).toLocaleDateString();
+
+    return tasks.filter(task => {
+        const taskPlannedDate = task.plannedStartTime?.date
+            ? new Date(task.plannedStartTime.date).toLocaleDateString()
+            : null;
+        const taskDueDate = new Date(task.dueDate.startDate).toLocaleDateString();
+
+        return (taskPlannedDate === formattedDate || taskDueDate === formattedDate);
+    });
+};
+
 // Update a task
 const updateTask = async (req, res) => {
     try {
         const { id } = req.params;
+        // const userId = req.user._id;
+        // const status = req.body.status
         const updatedTask = await Task.findOneAndUpdate({ _id: id, userId: req.user.id }, req.body, { new: true });
-        if (!updatedTask) return res.status(404).json({ error: 'Task not found' });
         console.log(updatedTask, "updatedTask");
-        sendMessage('task_updates', updatedTask);
+        if (!updatedTask) return res.status(404).json({ error: 'Task not found' });
+
+        // Publish a message to RabbitMQ for the user service
+        // if (status === "completed") {
+        //     await sendMessage('task_updates', {
+        //         id,
+        //         userId,
+        //         status,
+        //         dueDate: updateTask.dueDate,
+        //     });
+        // }
+        await sendMessage('task_updates', updatedTask);
 
 
         //to RL service - check wether the task is completed/deferred
-        // sendMessage('taskQueue', updatedTask);
-        // if (updatedTask?.status === "completed")
         sendMessage('taskQueue', updatedTask);
+        // if (updatedTask?.status === "completed")
+        // sendMessage('taskQueue', updatedTask);
 
         await redisClient.del('tasks:*');
 
@@ -108,6 +134,83 @@ const updateTask = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+// const updateTaskStatus = async (req, res) => {
+//     try {
+//         const { taskId, status } = req.body;
+//         const userId = req.user._id;
+
+//         const task = await Task.findOne({ _id: taskId, userId });
+//         if (!task) {
+//             return res.status(404).json({ error: "Task not found" });
+//         }
+
+//         task.status = status;
+//         await task.save();
+
+//         // Publish a message to RabbitMQ for the user service
+//         if (status === "completed") {
+//             await sendMessage('task_updates', {
+//                 taskId,
+//                 userId,
+//                 status,
+//                 dueDate: task.dueDate,
+//             });
+//         }
+
+//         res.status(200).json({ message: "Task status updated successfully", task });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
+
+
+// const updateTaskStatus = async (req, res) => {
+//     try {
+//         const { taskId, status } = req.body;
+//         const userId = req.user._id;
+
+//         const task = await Task.findOne({ _id: taskId, userId });
+//         if (!task) {
+//             return res.status(404).json({ error: "Task not found" });
+//         }
+
+//         task.status = status;
+//         await task.save();
+
+//         if (status === "completed") {
+//             const user = await User.findById(userId);
+//             const today = new Date().setHours(0, 0, 0, 0);
+
+//             // Update streak
+//             if (user.lastCompletedDay) {
+//                 const lastDay = new Date(user.lastCompletedDay).setHours(0, 0, 0, 0);
+//                 if (today - lastDay === 86400000) { // 1 day difference
+//                     user.streak += 1;
+//                 } else if (today - lastDay > 86400000) {
+//                     user.streak = 1; // Reset streak
+//                 }
+//             } else {
+//                 user.streak = 1; // First completed day
+//             }
+//             user.lastCompletedDay = today;
+
+//             // Calculate daily progress
+//             const completedTasks = await Task.countDocuments({ userId, status: "completed", "dueDate.startDate": { $lte: today }, "dueDate.endDate": { $gte: today } });
+//             const totalTasks = await Task.countDocuments({ userId, "dueDate.startDate": { $lte: today }, "dueDate.endDate": { $gte: today } });
+
+//             user.progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+//             await user.save();
+//         }
+
+//         res.status(200).json({ message: "Task status updated successfully", task });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
+
+// const { sendMessage } = require('./rabbitmq'); // Import RabbitMQ utility
+
 
 // Delete a task
 const deleteTask = async (req, res) => {
@@ -124,4 +227,4 @@ const deleteTask = async (req, res) => {
     }
 };
 
-export { createTask, getAllTasks, updateTask, deleteTask };
+export { createTask, getAllTasks, updateTask, deleteTask, };

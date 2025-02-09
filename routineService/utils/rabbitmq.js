@@ -14,6 +14,8 @@ const connectRabbitMQ = async () => {
         await channel.assertQueue('task_updates', { durable: true });
         await channel.assertQueue('analysisQueue', { durable: true });
         await channel.assertQueue('task_list', { durable: true });
+
+        await channel.assertQueue('task_data_request', { durable: true });
         await channel.assertQueue('task_suggestion_queue', { durable: true });
 
         console.log('Connected to RabbitMQ');
@@ -78,61 +80,58 @@ const acknowledgeMessage = async (message) => {
 // };
 const parseMessageContent = (messageContent) => {
     try {
-        console.log(messageContent, "messageContent")
-        if (!messageContent) {
-            throw new Error("Invalid message content: 'data' is undefined");
+        console.log('Message content before parsing:', messageContent);
+
+        // Validate message structure
+        if (typeof messageContent !== 'object' || !messageContent.userId || !messageContent.date) {
+            throw new Error("Invalid message structure: 'userId' or 'date' is missing");
         }
 
-        // Convert Buffer data to a string
-        const decodedMessage = Buffer.from(messageContent).toString();
-
-        console.log(decodedMessage, "decodedMessage");
-        // Parse the string as JSON
-        const parsedMessage = decodedMessage;
-        console.log(parsedMessage, "parsedMessage");
-
-        // Validate the structure
-        if (Array.isArray(messageContent) && messageContent.length === 2) {
-            const [userId, suggestions] = messageContent;
-
-            // Ensure `suggestions` is an array
-            if (typeof userId === 'string' && Array.isArray(suggestions)) {
-                return { userId, suggestions };
-            } else {
-                throw new Error("Invalid structure in parsed message");
-            }
-        } else {
-            throw new Error("Message content must be an array of [userId, suggestions]");
-        }
+        // Example: Perform additional validation or transformations if needed
+        return {
+            userId: messageContent.userId,
+            date: new Date(messageContent.date), // Convert date to JavaScript Date object
+        };
     } catch (err) {
-        console.error("Error parsing message content:", err);
-        throw err; // Re-throw the error for upstream handling
+        console.error('Error parsing message content:', err);
+        return null; // Return null to indicate invalid parsing
     }
 };
+
 
 
 
 export const consumeMessage = async (queue, callback) => {
     await channel.consume(queue, async (message) => {
         try {
-
             console.log('Received message:', message);
+
+            // Convert message content from Buffer to string and parse it as JSON
             const rawContent = message.content.toString();
+            console.log(rawContent, "rawContent");
             const messageContent = JSON.parse(rawContent);
-            // const messageContent = JSON.parse(message.content.toString());
-            const parsedMessage = parseMessageContent(messageContent);
-            if (!parsedMessage) return acknowledgeMessage(message); // Skip if parsing fails
+            console.log('Parsed message content:', messageContent);
+
+            // Validate and process the message content
+            // const parsedMessage = parseMessageContent(messageContent);
+            // if (!parsedMessage) {
+            //     console.warn('Parsed message is invalid, skipping.');
+            //     return acknowledgeMessage(message); // Skip if parsing fails
+            // }
 
             // Call the provided callback with the parsed message
-            await callback(parsedMessage);
+            // await callback(parsedMessage);
+            await callback(messageContent)
 
-            await acknowledgeMessage(message); // Acknowledge after processing
+            // Acknowledge the message after successful processing
+            await acknowledgeMessage(message);
         } catch (error) {
             console.error('Error processing message:', error);
-            await acknowledgeMessage(message); // Acknowledge to prevent it from being stuck in the queue
+            await acknowledgeMessage(message); // Acknowledge to prevent the message from being stuck
         }
     }, { noAck: false });
 };
+
 
 
 // export const consumeMessage = async (queue) => {
@@ -371,6 +370,8 @@ export const publishTaskList = async (taskList) => {
 //     });
 // };
 
+
+
 export const consumeTaskSuggestions = async () => {
     await consumeMessage('task_suggestion_queue', async (message) => {
         console.log('Received raw message:', message);
@@ -420,6 +421,61 @@ export const consumeTaskSuggestions = async () => {
             console.error('Error processing tasks for userId:', userId, error);
         }
     });
+
+    await consumeMessage('task_data_request', async (msg) => {
+        try {
+            if (!msg) {
+                console.error("Received undefined message.");
+                return;
+            }
+            console.log("task_data_request:", msg);
+
+            const messageContent = msg
+            const { userId, date, replyTo, correlationId } = messageContent;
+            if (!correlationId) {
+                console.error("Missing correlationId in message:", messageContent);
+                return;
+            }
+            if (!userId || !date || !replyTo || !correlationId) {
+                console.error("Invalid message content:", messageContent);
+                return;
+            }
+
+            const date1 = new Date()
+            const startOfDay = new Date(date1.setHours(0, 0, 0, 0)).toISOString();
+            const endOfDay = new Date(date1.setHours(23, 59, 59, 999)).toISOString();
+
+            const query = {
+                userId,
+                'dueDate.startDate': { $lte: endOfDay },
+                'dueDate.endDate': { $gte: startOfDay },
+            };
+
+            console.log(query, "query");
+            const [completedTasks, totalTasks] = await Promise.all([
+                Task.countDocuments({ ...query, status: 'completed' }),
+                Task.countDocuments(query),
+            ]);
+
+            const responseMessage = { completedTasks, totalTasks };
+
+            channel.sendToQueue(replyTo, Buffer.from(JSON.stringify(responseMessage)), {
+                correlationId,
+            });
+
+            console.log(`Response sent for userId ${userId}:`, responseMessage);
+
+            // if (msg.fields && msg.fields.deliveryTag) {
+            //     channel.ack(msg);
+            // } else {
+            //     console.error("Cannot acknowledge message, invalid deliveryTag.");
+            // }
+        } catch (error) {
+            console.error('Error processing task data request:', error.message);
+        }
+    });
+
+
 };
 
 // Example function to fetch tasks for a user

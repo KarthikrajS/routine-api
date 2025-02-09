@@ -1,7 +1,7 @@
 import pika
 import json
 from rl_model import train_model, get_suggestions
-RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672")
+RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqps://aedzelrz:WyaTGqjpwTkTlac4KeY6l4qCcCIvobca@campbell.lmq.cloudamqp.com/aedzelrz")
 
 def process_task_update(ch, method, properties, body):
     try:

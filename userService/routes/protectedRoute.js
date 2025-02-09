@@ -1,13 +1,15 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
+import { getUserStats } from '../controllers/userController.js';
 
 const router = express.Router();
 
 // A protected route that only authenticated users can access
 router.get('/profile', protect, async (req, res) => {
-    console.log("reached")
+    // console.log("reached")
     res.json({ message: 'Welcome to your profile', user: req.user });
 });
+
 router.put('/mood', protect, async (req, res) => {
     const { mood } = req.body;
 
@@ -26,4 +28,7 @@ router.put('/mood', protect, async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
+// router.get('/stats', protect, getUserStats);
+
 export default router;
