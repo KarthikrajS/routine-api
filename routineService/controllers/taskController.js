@@ -50,13 +50,47 @@ export const fetchTasksForUser = async (userId) => {
     }
 };
 // Get all tasks
+// const getAllTasks = async (req, res) => {
+//     try {
+//         const userId = req.user._id
+//         const { page = 1, limit = 10, view } = req.query;
+//         const cacheKey = `tasks:${userId}:${page}:${limit}`;
+//         // :${JSON.stringify(filters)}
+
+
+//         console.log(view, "view");
+//         if (view == "calendar") {
+//             var tasks = await Task.find({ userId: req.user.id });
+
+//             res.status(200).json(tasks);
+//         }
+//         if (view == "list") {
+//             var tasks = await Task.find({ userId: req.user.id })
+//                 .skip((page - 1) * limit)
+//                 .limit(limit);
+
+
+//             const totalTasks = await Task.countDocuments({ userId: req.user.id });
+//             redisClient.set(cacheKey, 3600, JSON.stringify(tasks));
+//             res.json({
+//                 tasks,
+//                 totalTasks,
+//                 totalPages: Math.ceil(totalTasks / limit),
+//                 currentPage: page,
+//             });
+//         }
+//     }
+//     catch (err) {
+//         console.log(err, "asdadda");
+//         res.status(500).json({ error: err.message });
+//     }
+// }
 const getAllTasks = async (req, res) => {
     try {
-        const userId = req.user._id
+        const userId = req.user._id;
         const { page = 1, limit = 10, view } = req.query;
         const cacheKey = `tasks:${userId}:${page}:${limit}`;
         // :${JSON.stringify(filters)}
-
 
         console.log(view, "view");
         if (view == "calendar") {
@@ -66,6 +100,7 @@ const getAllTasks = async (req, res) => {
         }
         if (view == "list") {
             var tasks = await Task.find({ userId: req.user.id })
+                .sort({ 'dueDate.startDate': 1 }) // Add sorting by dueDate.startDate
                 .skip((page - 1) * limit)
                 .limit(limit);
 
@@ -78,13 +113,11 @@ const getAllTasks = async (req, res) => {
                 currentPage: page,
             });
         }
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err, "asdadda");
         res.status(500).json({ error: err.message });
     }
-}
-
+};
 
 const fetchTasksForDate = async (userId, date) => {
     const tasks = await Task.find({ userId });

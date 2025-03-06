@@ -21,18 +21,17 @@ const taskSchema = new mongoose.Schema({
         date: { type: Date },
         time: { type: String },
     },
-    taskType:{type:String, enum:["Personal care","Meals","Transportation","Household chores","Leisure","Exercise","Work","Social","Incidental","Coordinated","Planned","Miscellaneous"]},
+    taskType: { type: String, enum: ["Personal care", "Meals", "Transportation", "Household chores", "Leisure", "Exercise", "Work", "Social", "Incidental", "Coordinated", "Planned", "Miscellaneous"] },
     status: { type: String, enum: ['pending', 'in_progress', 'completed', 'deferred'], default: 'pending' },
     feedback: { type: String },
     assigntTo: {
         _id: { type: mongoose.Schema.Types.ObjectId },
         username: { type: String },
     },
-    ai_suggestion:{
-        type : Boolean
+    ai_suggestion: {
+        type: Boolean
     }
-
-});
+}, { timestamps: true });
 
 const Task = mongoose.model('Task', taskSchema);
 export default Task;
