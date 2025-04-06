@@ -79,7 +79,9 @@ app.post('/api/register', async (req, res) => {
 //     });
 // };
 // cron.schedule('1 0 * * *', -> 12:01 AM every day) {
-cron.schedule('1 0 * * *', async () => {
+// second, minute, hour, day, month, weekday
+// @Scheduled(cron = "0 0 0 * * *",zone = "Indian/Maldives")
+cron.schedule('* */1 * * *', async () => {
     console.log('Running daily job to publish user list...');
     await fetchAndPublishUserList();
 }, {

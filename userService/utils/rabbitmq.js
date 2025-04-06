@@ -184,10 +184,10 @@ export const sendMessageAndWaitForResponse = async (queue, message) => {
             // When consuming the message
             channel.consume(replyQueue, (msg) => {
                 console.log("Received message:", msg);
-                console.log("Expected correlationId:", correlationId);
-                console.log("Message correlationId:", msg.properties.correlationId);
+                // console.log("Expected correlationId:", correlationId);
+                // console.log("Message correlationId:", msg.properties.correlationId);
 
-                if (msg.properties.correlationId === correlationId) {
+                // if (msg.properties.correlationId === correlationId) {
                     clearTimeout(timeout);
                     try {
                         const content = JSON.parse(msg.content.toString());
@@ -198,7 +198,7 @@ export const sendMessageAndWaitForResponse = async (queue, message) => {
                         reject(error);
                     }
                     channel.ack(msg);
-                }
+                // }
             }, { noAck: false });
 
 

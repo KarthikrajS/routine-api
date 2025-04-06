@@ -40,7 +40,7 @@ const PORT = process.env.PORT || 5000;
 //     timezone: 'UTC', // Set the timezone if needed
 // });
 // cron.schedule('1 0 * * *', -> 12:01 AM every day) {
-cron.schedule('1 0 * * *', async () => { // Adjust time based on User Service cron
+cron.schedule('* */1 * * *', async () => { // Adjust time based on User Service cron
     console.log('Running daily routine to fetch user tasks and publish task list...');
 
     try {
@@ -57,7 +57,7 @@ cron.schedule('1 0 * * *', async () => { // Adjust time based on User Service cr
             const tasks = await fetchTasksForUser(user._id); // Replace with actual logic
             if (tasks.length > 0) {
                 // Publish task list for the user
-                await publishTaskList(tasks);
+                await publishTaskList(user._id, tasks);
             }
         }
 

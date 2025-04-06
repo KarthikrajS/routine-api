@@ -22,7 +22,7 @@ const createTask = async (req, res) => {
 
 export const fetchTasksForUser = async (userId) => {
     try {
-        const tasks = await Task.find({ userId: userId }).sort({ _id: 1 });
+        const tasks = await Task.find({ userId: userId || user.id }).sort({ _id: 1 });
         if (!tasks || tasks.length === 0) {
             console.warn(`No tasks found for userId: ${userId}`);
         }
@@ -94,6 +94,7 @@ const getAllTasks = async (req, res) => {
 
         console.log(view, "view");
         if (view == "calendar") {
+
             var tasks = await Task.find({ userId: req.user.id });
 
             res.status(200).json(tasks);
@@ -118,6 +119,11 @@ const getAllTasks = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+export const getTodayTask = async (req, res) => {
+    var tasks = await fetchTasksForUser(req.user.id)
+    res.json(tasks);
+}
 
 const fetchTasksForDate = async (userId, date) => {
     const tasks = await Task.find({ userId });

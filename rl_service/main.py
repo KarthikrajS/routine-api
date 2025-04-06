@@ -1,4 +1,3 @@
-
 # RabbitMQ Connection Parameters
 from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
@@ -74,6 +73,7 @@ async def process_task_list_message(body: bytes):
 
         # Evaluate tasks using the RL model
         suggestions = get_suggestions(tasks)
+        suggestions = [suggestion.tolist() if hasattr(suggestion, "tolist") else suggestion for suggestion in suggestions]
         print(f"Suggestions for user {user_id}: {suggestions}")
 
         # Publish suggestions to task_suggestion_queue

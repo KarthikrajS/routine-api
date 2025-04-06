@@ -158,7 +158,7 @@ const getRabbitMQChannel = () => {
 
 // import { getTasksForUser } from './taskService'; // Import user-specific task fetcher
 // import { sendMessage, consumeMessage } from './rabbitmq'; // RabbitMQ helpers
-import { getAllTasks } from '../controllers/taskController.js';
+import { fetchTasksForUser, getAllTasks } from '../controllers/taskController.js';
 import Task from '../models/taskModel.js';
 
 // Function to fetch the user list from RabbitMQ
@@ -236,10 +236,10 @@ export const fetchUserList = async () => {
 // };
 
 
-export const publishTaskList = async (taskList) => {
+export const publishTaskList = async (userId, taskList) => {
     try {
         // console.log(taskList, "taskList");
-        const message = { tasks: taskList };
+        const message = { userId: userId, tasks: taskList };
         await sendMessage('task_list', message);
         console.log('Task list published:', message);
     } catch (error) {
@@ -413,7 +413,7 @@ export const consumeTaskSuggestions = async () => {
             // Process only today's tasks
             todaysTasks.forEach(async (task, index) => {
                 const suggestion = suggestions[index];
-                await updateTaskWithSuggestion(task._id, suggestion);
+                await updateTaskWithSuggestion(task._id, suggestion[0]);
             });
 
             console.log(`Successfully processed suggestions for userId: ${userId}`);
@@ -436,6 +436,7 @@ export const consumeTaskSuggestions = async () => {
                 console.error("Missing correlationId in message:", messageContent);
                 return;
             }
+            console.log(correlationId, "correlationId");
             if (!userId || !date || !replyTo || !correlationId) {
                 console.error("Invalid message content:", messageContent);
                 return;
@@ -479,10 +480,10 @@ export const consumeTaskSuggestions = async () => {
 };
 
 // Example function to fetch tasks for a user
-const fetchTasksForUser = async (userId) => {
-    // Fetch tasks from MongoDB based on userId
-    return await Task.find({ userId: userId }).sort({ _id: 1 });
-};
+// const fetchTasksForUser = async (userId) => {
+//     // Fetch tasks from MongoDB based on userId
+//     return await Task.find({ userId: userId }).sort({ _id: 1 });
+// };
 
 
 
